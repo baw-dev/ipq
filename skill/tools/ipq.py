@@ -50,7 +50,7 @@ sys.dont_write_bytecode = True  # never leave __pycache__ in the skill, which pr
 sys.modules.setdefault("ipq", sys.modules[__name__])  # so ipq_visuals shares this module when run as a script
 import ipq_visuals as visuals  # noqa: E402
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 SKILL = Path(__file__).resolve().parents[1]
 TEMPLATES = SKILL / "templates"
@@ -451,8 +451,15 @@ class DocSet:
 
 def parse_records(doc, specs):
     """Find heading records, condensed records, and table records in `doc`."""
-    def spec_for(id, kind):
-        return next((s for s in specs if s.kind == kind and s.matches(id)), None)
+    def spec_for(id, kind, section=None):
+        found = [s for s in specs if s.kind == kind and s.matches(id)]
+        if section is not None and is_archive(doc):
+            # An archive holds finished records in full, under the section that names their
+            # finished state, so a spec declared for that section wins over the working one.
+            placed = [s for s in found if section in s.sections]
+            if placed:
+                return placed[0]
+        return found[0] if found else None
 
     for h in doc.headings:
         if h.level < 3:
@@ -460,7 +467,7 @@ def parse_records(doc, specs):
         m = RECORD_HEADING.match(plain(h.text).strip())
         if not m or not re.search(r"[\d-]", m.group(1)):
             continue
-        spec = spec_for(m.group(1), "record")
+        spec = spec_for(m.group(1), "record", doc.section_of(h.line))
         if not spec:
             continue
         r = Record(m.group(1), "heading", spec, doc.section_of(h.line), h.line, m.group(2))
