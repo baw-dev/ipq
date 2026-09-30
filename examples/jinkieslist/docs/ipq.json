@@ -1,0 +1,10 @@
+{
+  "ipq": "1.0",
+  "history": {
+    "delta": "archive"
+  },
+  "period": {
+    "unit": "iteration",
+    "name": "sprint"
+  }
+}

@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Tests
+        run: python -m unittest discover tests
+      - name: Example sets conform
+        run: |
+          python skill/tools/ipq.py check tests/fixtures/acme/docs
+          python skill/tools/ipq.py check examples/jinkieslist/docs
+      - name: Install round trip
+        run: |
+          mkdir -p "$RUNNER_TEMP/project"
+          ./install.sh claude --project "$RUNNER_TEMP/project"
+          ./install.sh claude --check --project "$RUNNER_TEMP/project"
