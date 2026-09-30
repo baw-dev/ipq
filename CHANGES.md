@@ -25,6 +25,22 @@ Each entry has a permanent anchor, `#vMAJOR.MINOR.PATCH`, and a matching git
 tag, so a project can link to the exact release it was checked with. Headings
 may be reworded; anchors never change.
 
+<a id="v1.0.1"></a>
+## 1.0.1: an archive checks a record against its section's spec (template schema 2)
+
+**For every project:**
+- **Closed entries can be archived in full.** Inside a role's `archive.md`,
+  a record is now checked against the spec whose `in` names the section it
+  sits under, when a template declares one; otherwise against the first
+  matching spec, as before. So a project can add, to an adapted delta
+  template, a second `D-` record spec with `in="Closed"`, and archive closed
+  entries with the fields a closed entry has. Before, every archived `D-`
+  record was checked against the Open spec and needed `Waits on`. Outside an
+  archive nothing changes, so a full record cannot sit under Closed in
+  `delta.md` and be counted as open.
+
+**Updating documents:** nothing to do. A pin of `"1.0"` stays valid.
+
 <a id="v1.0.0"></a>
 ## 1.0.0: first public release (template schema 2)
 

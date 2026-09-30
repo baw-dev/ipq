@@ -378,6 +378,29 @@ class Templates(Base):
         self.assertIn(old, text)
         p.write_text(text.replace(old, new, 1))
 
+    def test_an_archive_uses_the_spec_for_its_section(self):
+        """A closed entry archived in full answers to a Closed record spec, not the Open one.
+        The preference holds only inside an archive; delta.md keeps the first matching spec."""
+        upstream = (REPO / "skill" / "templates" / "delta.md").read_text()
+        open_line = next(l for l in upstream.splitlines() if l.startswith('<!-- ipq:record id="D-'))
+        self.adapt("delta", open_line, open_line + "\n"
+                   '<!-- ipq:record id="D-\\d{3,}" in="Closed" fields="Owner*; Found*; Closed*; Canonical source" -->')
+        self.config(history={"delta": "archive"})
+        with open(self.docs / "delta.md", "a") as f:
+            f.write("\n## Closed\n\n- <a id=\"d-009\"></a>**D-009** Retention was undecided — settled in the prd"
+                    " · found 2026-09-01 · closed 2026-09-10\n")
+        (self.docs / "delta").mkdir()
+        (self.docs / "delta" / "archive.md").write_text(
+            "# Acme — Delta archive\n\n**Answers:** the full text of closed entries.\n\n"
+            "## Summary\n\nClosed entries.\n\n## Contents\n\n## Closed\n\n"
+            '<a id="d-009"></a>\n### D-009 — Retention was undecided\n\n'
+            "- **Owner:** product\n- **Found:** 2026-09-01\n- **Closed:** 2026-09-10\n"
+            "- **Canonical source:** [R-CORE-01](../prd.md#r-core-01)\n")
+        self.fix()
+        archived = [f for f in self.findings() if f[1].name == "archive.md" and f[0] == "error"]
+        self.assertEqual(archived, [], archived)
+        self.assertNotIn(("error", "fields"), self.rules())
+
     def test_adapted_template_adds_a_section_and_a_field(self):
         self.adapt("backlog", "## Blocked\n", "## Readiness track\n<!-- ipq:optional -->\n\n## Blocked\n")
         self.adapt("backlog", "Blocked by; Done when*", "Blocked by; Track; Done when*")
